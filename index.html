@@ -1,1 +1,202 @@
-Hello World
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Application</title>
+    <!-- include Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+        integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+    <!-- include custom CSS -->
+    <style>
+        .highlight {
+            background-color: yellow;
+        }
+
+        .box {
+            border: 1px solid lightgray;
+            border-radius: 1px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-6 inputs">
+                <!-- button to add more input fields -->
+                <button id="addInput" class="btn btn-primary">Add Sequence</button>
+            </div>
+            <div class="col-6">
+                <!-- output field -->
+                <div id="output" class="p-3 text-wrap text-pre-wrap text-break box"></div>
+            </div>
+        </div>
+    </div>
+    <!-- include Bootstrap JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
+        integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.16.6/dist/umd/popper.min.js"
+        integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut"
+        crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"
+        integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV"
+        crossorigin="anonymous"></script>
+    <!-- include custom JavaScript -->
+    <script>
+        // get input fields and output field
+        const inputs = document.getElementsByClassName('inputs')[0];
+        const output = document.getElementById('output');
+        const addInputButton = document.getElementById('addInput');
+
+        // create counter to keep track of number of input fields
+        let inputCounter = 0;
+
+        // for (let i = 0; i < inputCounter; i++) {
+        //     addInput()
+        // }
+
+        // add event listener to addInput button
+        addInputButton.addEventListener('click', addInput);
+
+        function addInput() {
+            // create new input field
+            const inputGroup = document.createElement('div');
+            inputGroup.classList.add('input-group', 'mb-3');
+
+            const input = document.createElement('textarea');
+            input.type = 'text';
+            input.classList.add('form-control');
+            input.addEventListener('input', updateOutput);
+
+            // give input field a unique id
+            input.id = `input${++inputCounter}`;
+
+            // create remove button
+            const removeButton = document.createElement('button');
+            removeButton.type = 'button';
+            removeButton.classList.add('btn', 'btn-outline-secondary');
+            removeButton.innerHTML = 'Remove';
+            removeButton.addEventListener('click', removeInput);
+
+            // add input field and remove button to input group
+            inputGroup.appendChild(input);
+            inputGroup.appendChild(removeButton);
+
+            // add input group to inputs container
+            inputs.insertBefore(inputGroup, addInputButton);
+        }
+
+        function removeInput(event) {
+            // get input group element
+            const inputGroup = event.target.parentElement;
+
+            // remove input group from inputs container
+            inputs.removeChild(inputGroup);
+
+            // update output field
+            updateOutput();
+        }
+
+        function updateOutput() {
+            // get values of input fields
+            const values =
+                Array.from(document.getElementsByClassName('form-control')).map(input => input.value);
+
+            // update output field
+            output.innerHTML = values.join('<br><br>');
+
+            // highlight some text randomly
+            const words = output.innerHTML.split('<br><br>');
+            for (let index = 1; index < words.length; index++) {
+                words[index] = highlightDifferences(words[0], words[index])
+            }
+            output.innerHTML = words.join('<br><br>');
+        }
+
+        function highlightDifferences(reference, word) {
+            // Find the longest common subsequence
+            const lcs = longestCommonSubsequence(reference, word);
+
+            let result = "";
+            let rIndex = 0; // index for iterating through reference string
+            let wIndex = 0; // index for iterating through word string
+            let lcsIndex = 0; // index for iterating through lcs string
+
+            // Iterate through both the reference and word strings
+            while (rIndex < reference.length || wIndex < word.length) {
+                // If the current character in the reference and word match
+                // the next character in the LCS, it is part of the LCS
+                if (reference[rIndex] === lcs[lcsIndex] && word[wIndex] === lcs[lcsIndex]) {
+                    result += `<span style="color: green">${reference[rIndex]}</span>`;
+                    rIndex++;
+                    wIndex++;
+                    lcsIndex++;
+                }
+                // If the current character in the reference is not in the LCS,
+                // it is present in the reference but not the word
+                else if (reference[rIndex] !== lcs[lcsIndex]) {
+                    result += `<span style="text-decoration: line-through; color: red">${reference[rIndex]}</span>`;
+                    rIndex++;
+                }
+                // If the current character in the word is not in the LCS,
+                // it is present in the word but not the reference
+                else if (word[wIndex] !== lcs[lcsIndex]) {
+                    result += `<span style="color: blue">${word[wIndex]}</span>`;
+                    wIndex++;
+                }
+            }
+
+            return result;
+        }
+
+        function longestCommonSubsequence(s1, s2) {
+            // Initialize a 2D array to store the lengths of the longest common subsequences
+            let dp = new Array(s1.length + 1);
+            for (let i = 0; i <= s1.length; i++) {
+                dp[i] = new Array(s2.length + 1).fill(0);
+            }
+
+            // Iterate through the s1 and s2 strings, filling in the dp array
+            for (let i = 1; i <= s1.length; i++) {
+                for (let j = 1; j <= s2.length; j++) {
+                    // If the characters at index i-1 in s1 and index j-1 in s2 are the same, add 1 to the longest common subsequence ending at those indices
+                    if (s1[i - 1] == s2[j - 1]) {
+                        dp[i][j] = dp[i - 1][j - 1] + 1;
+                    } else {
+                        // Otherwise, take the maximum of the longest common subsequences ending at the previous indices in s1 and s2
+                        dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
+                    }
+                }
+            }
+
+            // Initialize an empty result array to store the longest common subsequence
+            let result = [];
+
+            // Initialize indices to keep track of where we are in s1 and s2
+            let i = s1.length;
+            let j = s2.length;
+
+            // While we have not reached the beginning of either string, add the characters in the longest common subsequence to the result array
+            while (i > 0 && j > 0) {
+                // If the characters at index i-1 in s1 and index j-1 in s2 are the same, add that character to the result array and decrement both indices
+                if (s1[i - 1] == s2[j - 1]) {
+                    result.unshift(s1[i - 1]);
+                    i--;
+                    j--;
+                } else {
+                    // Otherwise, take the maximum of the longest common subsequences ending at the previous indices in s1 and s2, and decrement the corresponding index
+                    if (dp[i - 1][j] > dp[i][j - 1]) {
+                        i--;
+                    } else {
+                        j--;
+                    }
+                }
+            }
+
+            return result;
+        }
+    </script>
+</body>
+
+</html>
